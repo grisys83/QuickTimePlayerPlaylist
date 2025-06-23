@@ -70,6 +70,7 @@ QuickTimePlayerPlaylist/
 ├── QuickTimePlayerAudioPlaylist.py  # Audio playlist app
 ├── QuickTimePlayerVideoPlaylist.py  # Video playlist app
 ├── AudioVideoConverterGUI.py        # Audio-to-video converter
+├── audio_to_video_minimal.py       # Core converter module (ALAC support)
 ├── requirements.txt                 # Python dependencies
 ├── SECURITY_SETUP.md               # Security setup guide
 └── development/                    # Features in development
@@ -81,6 +82,8 @@ QuickTimePlayerPlaylist/
 - **AppleScript Integration**: Direct QuickTime Player control
 - **JSON Configuration**: Save playlists and settings
 - **Multi-threaded**: Smooth playback without UI blocking
+- **ALAC Audio Codec**: Lossless audio quality for converted videos
+- **Accurate Duration Handling**: Proper video length using ffprobe
 
 ## Known Limitations
 

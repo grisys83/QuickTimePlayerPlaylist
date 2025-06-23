@@ -70,6 +70,7 @@ QuickTimePlayerPlaylist/
 ├── QuickTimePlayerAudioPlaylist.py  # 오디오 플레이리스트 앱
 ├── QuickTimePlayerVideoPlaylist.py  # 비디오 플레이리스트 앱
 ├── AudioVideoConverterGUI.py        # 오디오→비디오 변환기
+├── audio_to_video_minimal.py       # 변환 핵심 모듈 (ALAC 지원)
 ├── requirements.txt                 # Python 의존성
 ├── SECURITY_SETUP.md               # 보안 설정 가이드
 └── development/                    # 개발 중인 기능들
@@ -81,6 +82,8 @@ QuickTimePlayerPlaylist/
 - **AppleScript 통합**: QuickTime Player 직접 제어
 - **JSON 설정 관리**: 플레이리스트와 설정 저장
 - **멀티스레드 처리**: UI 차단 없는 부드러운 재생
+- **ALAC 오디오 코덱**: 변환된 비디오의 무손실 오디오 품질
+- **정확한 재생시간 처리**: ffprobe를 이용한 올바른 비디오 길이
 
 ## 알려진 제한사항
 
