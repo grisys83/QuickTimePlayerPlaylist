@@ -4,56 +4,57 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is a macOS-specific application that provides playlist functionality for QuickTime Player, which natively only supports playing one video at a time. The codebase offers multiple implementation approaches: AppleScript-based solutions, Python GUI applications, and shell script wrappers.
+This is a macOS-specific application suite that provides playlist functionality for QuickTime Player, which natively only supports playing one file at a time. The project includes three main PyQt5-based GUI applications with AirPlay automation support, plus an audio-to-video converter using ALAC (Apple Lossless) codec.
 
 ## Key Commands
 
 ### Running the Applications
 
 ```bash
-# AppleScript version (drag & drop support)
-osascript PlayVideosInOrder.applescript
+# Main Applications (PyQt5 GUI with AirPlay support)
+python3 QuickTimePlayerAudioPlaylist.py   # Audio playlist
+python3 QuickTimePlayerVideoPlaylist.py   # Video playlist
+python3 AudioVideoConverterGUI.py         # Audio to video converter (ALAC)
 
-# Python GUI version
-python3 quicktime_playlist_gui.py
-
-# Shell script wrapper
-./play_videos_shell.sh video1.mp4 video2.mp4
-
-# Direct playback (no UI)
-osascript PlayVideosDirect.applescript /path/to/video1.mp4 /path/to/video2.mp4
+# Legacy/Development versions (in development folder)
+osascript development/PlayVideosInOrder.applescript
+python3 development/quicktime_playlist_gui.py
 ```
 
 ### Testing
 
 ```bash
-# Test QuickTime capabilities
-./quicktime_capabilities_test.sh
+# Test audio to video conversion
+python3 audio_to_video_minimal.py audio_file.mp3
+
+# Test QuickTime capabilities (in development folder)
+./development/quicktime_capabilities_test.sh
 
 # Test basic QuickTime controls
-osascript TestQuickTime.applescript
-
-# Test UI automation
-osascript test_ui_automation.applescript
+osascript development/TestQuickTime.applescript
 ```
 
 ## Architecture & Code Structure
 
 ### Core Components
 
-1. **AppleScript Solutions** (`*.applescript`)
-   - Direct QuickTime Player automation via AppleScript
-   - Event-driven approach monitoring playback completion
-   - Each script represents different complexity levels and features
+1. **Main Applications** (PyQt5-based)
+   - `QuickTimePlayerAudioPlaylist.py`: Full-featured audio playlist with AirPlay automation
+   - `QuickTimePlayerVideoPlaylist.py`: Video playlist with drag-and-drop support
+   - `AudioVideoConverterGUI.py`: Converts audio to video with minimal visuals
+   - All use inline AppleScript via subprocess for QuickTime control
 
-2. **Python GUI** (`quicktime_playlist_gui.py`)
-   - tkinter-based interface for playlist management
-   - Spawns AppleScript commands via subprocess
-   - Optional drag-and-drop support with tkinterdnd2
+2. **Audio to Video Converter Module**
+   - `audio_to_video_minimal.py`: Core conversion module
+   - Uses ALAC (Apple Lossless) codec for audio
+   - Accurate duration handling with ffprobe
+   - Creates videos with album art or minimal visuals
 
-3. **AirPlay Support** (`quicktime_with_airplay.py`, `quicktime_airplay_simple.py`)
-   - Requires PyObjC (pyobjc-framework-AVFoundation)
-   - Works around QuickTime's AirPlay limitations
+3. **AirPlay Automation**
+   - Uses `cliclick` for mouse automation
+   - Accessibility permissions required
+   - Automatic HomePod/Apple TV connection
+   - Visual detection for AirPlay UI elements
 
 ### Key Technical Considerations
 
@@ -67,8 +68,10 @@ osascript test_ui_automation.applescript
 
 4. **Platform Dependency**: This codebase is macOS-only and requires:
    - QuickTime Player installed
-   - AppleScript support enabled
-   - Python 3.x for GUI versions
+   - Python 3.x with PyQt5
+   - FFmpeg (for audio conversion)
+   - cliclick (for AirPlay automation)
+   - Accessibility permissions for UI automation
 
 ## Development Guidelines
 
@@ -80,9 +83,9 @@ osascript test_ui_automation.applescript
 
 ### When Working on Python GUI
 
-- Keep tkinter as the primary dependency (standard library)
-- Optional dependencies should remain optional
-- Test both with and without drag-drop support
+- PyQt5 is the primary GUI framework (not tkinter)
+- Test AirPlay automation features with proper permissions
+- Handle audio-to-video conversion dependencies (mutagen, pillow)
 
 ### Adding New Features
 
@@ -92,7 +95,8 @@ osascript test_ui_automation.applescript
 
 ## Important Limitations
 
-1. QuickTime Player does not support true playlists
-2. Videos must play sequentially, not simultaneously
-3. AirPlay support is limited and may require workarounds
-4. Drag-and-drop functionality requires additional setup on some macOS versions
+1. QuickTime Player does not support true playlists - sequential playback only
+2. AirPlay automation requires mouse control (no direct API)
+3. Audio files must be converted to video for QuickTime playback
+4. macOS Accessibility permissions required for UI automation
+5. ALAC codec used for lossless audio quality in converted videos
