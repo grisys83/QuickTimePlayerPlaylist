@@ -40,6 +40,8 @@ brew install cliclick        # Required for AirPlay automation
 
 ## Usage
 
+⚠️ **Important**: Run these applications directly from Terminal for full functionality. Standalone app bundles (e.g., created with PyInstaller) may not support AirPlay automation due to macOS security restrictions.
+
 ### Audio Playlist
 ```bash
 python3 QuickTimePlayerAudioPlaylist.py

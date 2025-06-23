@@ -40,6 +40,8 @@ brew install cliclick        # AirPlay 자동화에 필요
 
 ## 사용법
 
+⚠️ **중요**: AirPlay 자동화를 포함한 모든 기능을 사용하려면 터미널에서 직접 실행하세요. PyInstaller로 빌드된 독립 실행형 앱은 macOS 보안 제한으로 인해 AirPlay 자동화가 작동하지 않을 수 있습니다.
+
 ### 오디오 플레이리스트
 ```bash
 python3 QuickTimePlayerAudioPlaylist.py
