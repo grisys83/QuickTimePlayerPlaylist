@@ -1,0 +1,8 @@
+# Core Dependencies
+PyQt5>=5.15.0
+Pillow>=9.0.0
+mutagen>=1.45.0
+
+# Optional Dependencies
+# pyautogui>=0.9.53  # For automated clicking (optional)
+# pyobjc-framework-AVFoundation>=8.0  # For AirPlay features (macOS only, optional)
