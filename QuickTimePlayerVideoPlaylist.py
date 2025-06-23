@@ -912,7 +912,7 @@ class VideoPlaylistPro(QMainWindow):
     
     def _handle_track_finished_after_close(self):
         """Handle track finished after document is closed"""
-        # Check if in single track mode
+        # Check if in single track mode FIRST - this takes priority over all other modes
         if self.single_track_mode:
             self.single_track_mode = False
             self.current_track_label.setText(f"Finished: {Path(self.playlist[self.current_index]).name}")
