@@ -23,7 +23,7 @@ class SettingsDialog(QDialog):
         super().__init__(parent)
         self.setWindowTitle("Settings")
         self.setModal(True)
-        self.resize(400, 250)
+        self.resize(400, 350)
         
         # Get current settings
         self.settings = parent.settings if parent else {}
@@ -92,6 +92,21 @@ class SettingsDialog(QDialog):
         timing_group.setLayout(timing_layout)
         layout.addWidget(timing_group)
         
+        # Playback Settings Group
+        playback_group = QGroupBox("Playback Settings")
+        playback_layout = QVBoxLayout()
+        
+        # Auto minimize checkbox
+        self.auto_minimize_check = QCheckBox("Auto-minimize window when AirPlay is active")
+        self.auto_minimize_check.setChecked(self.settings.get('auto_minimize_on_airplay', True))
+        self.auto_minimize_check.setToolTip(
+            "Automatically minimize QuickTime window when playing through AirPlay"
+        )
+        playback_layout.addWidget(self.auto_minimize_check)
+        
+        playback_group.setLayout(playback_layout)
+        layout.addWidget(playback_group)
+        
         # Help text
         help_text = QLabel(
             "Tip: If AirPlay is not clicking the right device, adjust the X and Y offsets.\n"
@@ -123,7 +138,8 @@ class SettingsDialog(QDialog):
             'airplay_offset_x': self.x_offset_spin.value(),
             'airplay_offset_y': self.y_offset_spin.value(),
             'airplay_delay': self.delay_spin.value(),
-            'airplay_menu_wait': self.menu_wait_spin.value()
+            'airplay_menu_wait': self.menu_wait_spin.value(),
+            'auto_minimize_on_airplay': self.auto_minimize_check.isChecked()
         }
 
 
@@ -1012,10 +1028,19 @@ class AudioPlaylistPro(QMainWindow):
     def start_playback(self):
         """Start playing the loaded document"""
         try:
+            # Check if auto-minimize is enabled in settings
+            auto_minimize = self.settings.get('auto_minimize_on_airplay', True)
+            
             script = '''
             tell application "QuickTime Player"
                 if (count documents) > 0 then
                     play front document
+                    ''' + ('''
+                    -- Minimize window if AirPlay is active
+                    if exists window 1 then
+                        set miniaturized of window 1 to true
+                    end if
+                    ''' if auto_minimize and self.airplay_btn.isChecked() else '') + '''
                     return "playing"
                 else
                     return "no document"
