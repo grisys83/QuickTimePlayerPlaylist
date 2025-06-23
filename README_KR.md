@@ -30,11 +30,12 @@ QuickTime Player에 플레이리스트 기능을 추가하여 여러 파일을 �
 git clone https://github.com/grisys83/QuickTimePlayerPlaylist.git
 cd QuickTimePlayerPlaylist
 
-# 의존성 설치
+# Python 의존성 설치
 pip3 install -r requirements.txt
 
-# AirPlay 자동화를 위한 cliclick 설치 (선택사항)
-brew install cliclick
+# 필수 도구 설치
+brew install ffmpeg          # 오디오→비디오 변환에 필요
+brew install cliclick        # AirPlay 자동화에 필요
 ```
 
 ## 사용법

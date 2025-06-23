@@ -244,8 +244,7 @@ class MinimalAudioToVideoConverter:
             '-preset', 'ultrafast',  # 가장 빠른 인코딩
             '-tune', 'stillimage',
             '-pix_fmt', 'yuv420p',
-            '-c:a', 'aac',
-            '-b:a', '256k',
+            '-c:a', 'alac',
             '-ac', '2',
             '-shortest',
             '-movflags', '+faststart',

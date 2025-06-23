@@ -30,11 +30,12 @@ A macOS application that adds playlist functionality to QuickTime Player, enabli
 git clone https://github.com/grisys83/QuickTimePlayerPlaylist.git
 cd QuickTimePlayerPlaylist
 
-# Install dependencies
+# Install Python dependencies
 pip3 install -r requirements.txt
 
-# Install cliclick for AirPlay automation (optional)
-brew install cliclick
+# Install required tools
+brew install ffmpeg          # Required for audio-to-video conversion
+brew install cliclick        # Required for AirPlay automation
 ```
 
 ## Usage

@@ -24,7 +24,44 @@ except ImportError:
         from audio_to_video_minimal import MinimalAudioToVideoConverter
     except ImportError:
         # Last resort - define a minimal converter inline
-        MinimalAudioToVideoConverter = None
+        class MinimalAudioToVideoConverter:
+            def convert_to_video(self, audio_file, output_file):
+                """Simple conversion using ffmpeg with ALAC"""
+                try:
+                    import subprocess
+                    import shutil
+                    
+                    ffmpeg = shutil.which('ffmpeg') or '/opt/homebrew/bin/ffmpeg'
+                    if not os.path.exists(ffmpeg):
+                        return False
+                    
+                    # Create a simple black video with ALAC audio
+                    cmd = [
+                        ffmpeg,
+                        '-i', audio_file,
+                        '-f', 'lavfi',
+                        '-i', 'color=c=black:s=1920x1080:r=1',
+                        '-map', '1:v',
+                        '-map', '0:a',
+                        '-c:v', 'h264',
+                        '-preset', 'ultrafast',
+                        '-tune', 'stillimage',
+                        '-pix_fmt', 'yuv420p',
+                        '-c:a', 'alac',  # Apple Lossless Audio Codec
+                        '-ac', '2',
+                        '-shortest',
+                        '-movflags', '+faststart',
+                        str(output_file),
+                        '-y',
+                        '-loglevel', 'error'
+                    ]
+                    
+                    result = subprocess.run(cmd, capture_output=True)
+                    return result.returncode == 0
+                    
+                except Exception as e:
+                    print(f"Conversion error: {e}")
+                    return False
 
 
 class DropZone(QLabel):
