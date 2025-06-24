@@ -308,6 +308,9 @@ class MinimalAudioToVideoConverter:
         # Duration이 있으면 추가 (use_duration이 True일 때만)
         if self.use_duration and duration:
             cmd.extend(['-t', str(duration)])
+        else:
+            # Duration 없으면 -shortest 옵션 추가 (오디오 길이에 맞춤)
+            cmd.extend(['-shortest'])
         
         cmd.extend([
             '-movflags', '+faststart',
