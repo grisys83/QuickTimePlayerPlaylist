@@ -21,9 +21,10 @@ import io
 import shutil
 
 class MinimalAudioToVideoConverter:
-    def __init__(self):
+    def __init__(self, use_duration=False):
         self.output_width = 1920
         self.output_height = 1080
+        self.use_duration = use_duration  # 기본값 False로 빠른 로딩 우선
         
         # Noto Sans CJK 폰트 경로들
         self.font_paths = [
@@ -190,43 +191,61 @@ class MinimalAudioToVideoConverter:
         if video_size > audio_size * 0.5:
             # 추가로 비디오 파일이 정상인지 확인
             try:
-                ffmpeg = shutil.which('ffmpeg') or '/opt/homebrew/bin/ffmpeg'
-                result = subprocess.run(
-                    [ffmpeg, '-i', str(output_file), '-f', 'null', '-'],
-                    capture_output=True,
-                    text=True
-                )
-                return result.returncode == 0
+                ffmpeg = shutil.which('ffmpeg')
+                if not ffmpeg:
+                    ffmpeg = '/opt/homebrew/bin/ffmpeg'
+                
+                if os.path.exists(ffmpeg):
+                    result = subprocess.run(
+                        [ffmpeg, '-i', str(output_file), '-f', 'null', '-'],
+                        capture_output=True,
+                        text=True,
+                        timeout=10
+                    )
+                    return result.returncode == 0
             except:
-                return False
+                pass
+            return False
         return False
     
     def get_audio_duration(self, audio_file):
         """오디오 파일의 정확한 duration 가져오기"""
-        ffprobe = shutil.which('ffprobe') or '/opt/homebrew/bin/ffprobe'
-        if not os.path.exists(ffprobe):
-            # ffprobe가 없으면 mutagen으로 시도
-            try:
-                audio = mutagen.File(audio_file)
-                if audio and audio.info and hasattr(audio.info, 'length'):
-                    return audio.info.length
-            except:
-                pass
-            return None
+        # ffprobe 경로 찾기
+        ffprobe = shutil.which('ffprobe')
+        if not ffprobe:
+            ffprobe = '/opt/homebrew/bin/ffprobe'
         
+        # ffprobe로 먼저 시도
+        if os.path.exists(ffprobe):
+            try:
+                cmd = [
+                    ffprobe,
+                    '-v', 'error',
+                    '-show_entries', 'format=duration',
+                    '-of', 'default=noprint_wrappers=1:nokey=1',
+                    str(audio_file)  # Path 객체를 문자열로 변환
+                ]
+                result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+                if result.returncode == 0 and result.stdout.strip():
+                    duration = float(result.stdout.strip())
+                    if duration > 0:  # 유효한 duration인지 확인
+                        return duration
+                else:
+                    print(f"  ffprobe 오류: {result.stderr}")
+            except Exception as e:
+                print(f"  ffprobe 실행 실패: {e}")
+        
+        # ffprobe 실패시 mutagen으로 시도
+        print("  ffprobe 실패, mutagen으로 시도...")
         try:
-            cmd = [
-                ffprobe,
-                '-v', 'error',
-                '-show_entries', 'format=duration',
-                '-of', 'default=noprint_wrappers=1:nokey=1',
-                audio_file
-            ]
-            result = subprocess.run(cmd, capture_output=True, text=True)
-            if result.returncode == 0:
-                return float(result.stdout.strip())
-        except:
-            pass
+            audio = mutagen.File(audio_file)
+            if audio and audio.info and hasattr(audio.info, 'length'):
+                duration = audio.info.length
+                if duration and duration > 0:
+                    return duration
+        except Exception as e:
+            print(f"  mutagen 실패: {e}")
+        
         return None
     
     def convert_to_video(self, audio_file, output_file=None):
@@ -243,10 +262,12 @@ class MinimalAudioToVideoConverter:
         print(f"처리 중: {Path(audio_file).name}")
         metadata = self.extract_metadata(audio_file)
         
-        # Duration 가져오기
-        duration = self.get_audio_duration(audio_file)
-        if duration:
-            print(f"  Duration: {duration:.1f}초")
+        # Duration 가져오기 (옵션)
+        duration = None
+        if self.use_duration:
+            duration = self.get_audio_duration(audio_file)
+            if duration:
+                print(f"  Duration: {duration:.1f}초")
         
         # 비주얼 생성
         visual_frame = self.create_visual_frame(metadata)
@@ -257,7 +278,10 @@ class MinimalAudioToVideoConverter:
             temp_image = tmp.name
             
         # ffmpeg 명령 (최적화)
-        ffmpeg = shutil.which('ffmpeg') or '/opt/homebrew/bin/ffmpeg'
+        ffmpeg = shutil.which('ffmpeg')
+        if not ffmpeg:
+            ffmpeg = '/opt/homebrew/bin/ffmpeg'
+        
         if not os.path.exists(ffmpeg):
             print("\n❌ FFmpeg not found!")
             print("Please install FFmpeg:")
@@ -270,7 +294,7 @@ class MinimalAudioToVideoConverter:
             '-loop', '1',
             '-framerate', '1',  # 1fps
             '-i', temp_image,
-            '-i', audio_file,
+            '-i', str(audio_file),  # Path 객체를 문자열로 변환
             '-map', '0:v',
             '-map', '1:a:0',
             '-c:v', 'h264',
@@ -281,12 +305,11 @@ class MinimalAudioToVideoConverter:
             '-ac', '2'
         ]
         
-        # Duration이 있으면 추가
-        if duration:
+        # Duration이 있으면 추가 (use_duration이 True일 때만)
+        if self.use_duration and duration:
             cmd.extend(['-t', str(duration)])
         
         cmd.extend([
-            '-shortest',
             '-movflags', '+faststart',
             str(output_file),
             '-y',
@@ -305,9 +328,9 @@ class MinimalAudioToVideoConverter:
                 os.unlink(temp_image)
             return None
 
-def batch_convert(audio_files):
+def batch_convert(audio_files, use_duration=False):
     """일괄 변환"""
-    converter = MinimalAudioToVideoConverter()
+    converter = MinimalAudioToVideoConverter(use_duration=use_duration)
     results = []
     
     for i, audio_file in enumerate(audio_files, 1):
@@ -331,12 +354,28 @@ def main():
         print("pip3 install mutagen pillow")
         sys.exit(1)
         
-    audio_files = sys.argv[1:]
+    # --duration 옵션 체크
+    use_duration = False
+    audio_files = []
+    
+    for arg in sys.argv[1:]:
+        if arg == '--duration':
+            use_duration = True
+        else:
+            audio_files.append(arg)
+    
+    if not audio_files:
+        print("오디오 파일을 지정하세요.")
+        sys.exit(1)
     
     print(f"미니멀 비디오 변환 시작 ({len(audio_files)}개 파일)")
+    if use_duration:
+        print("Duration 모드: 정확한 시간 표시 (느린 로딩)")
+    else:
+        print("빠른 모드: 프레임 표시 (빠른 로딩)")
     print("=" * 50)
     
-    results = batch_convert(audio_files)
+    results = batch_convert(audio_files, use_duration=use_duration)
     
     print("\n" + "=" * 50)
     print(f"변환 완료: {len(results)}/{len(audio_files)}개 성공")

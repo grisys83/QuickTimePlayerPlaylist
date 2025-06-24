@@ -1015,19 +1015,11 @@ class VideoPlaylistPro(QMainWindow):
     def start_playback(self):
         """Start playing the loaded document"""
         try:
-            # Check if auto-minimize is enabled in settings
-            auto_minimize = self.settings.get('auto_minimize_on_airplay', True)
-            
+            # First, just start playback
             script = '''
             tell application "QuickTime Player"
                 if (count documents) > 0 then
                     play front document
-                    ''' + ('''
-                    -- Minimize window if AirPlay is active
-                    if exists window 1 then
-                        set miniaturized of window 1 to true
-                    end if
-                    ''' if auto_minimize and self.airplay_btn.isChecked() else '') + '''
                     return "playing"
                 else
                     return "no document"
@@ -1041,8 +1033,29 @@ class VideoPlaylistPro(QMainWindow):
             if "playing" in result.stdout:
                 self.is_playing = True
                 self.play_btn.setText("⏸ Pause")
+                
+                # Check if auto-minimize is enabled and AirPlay is active
+                auto_minimize = self.settings.get('auto_minimize_on_airplay', True)
+                if auto_minimize and self.airplay_btn.isChecked():
+                    # Delay minimize by 300ms after playback starts
+                    QTimer.singleShot(300, self.minimize_window)
         except Exception as e:
             print(f"Error starting playback: {e}")
+    
+    def minimize_window(self):
+        """Minimize QuickTime window"""
+        try:
+            script = '''
+            tell application "QuickTime Player"
+                if exists window 1 then
+                    set miniaturized of window 1 to true
+                end if
+            end tell
+            '''
+            subprocess.run(['osascript', '-e', script], capture_output=True)
+            print("QuickTime window minimized")
+        except Exception as e:
+            print(f"Error minimizing window: {e}")
     
     def enable_airplay_and_start(self):
         """Enable AirPlay and then start playback"""
